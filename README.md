@@ -31,8 +31,8 @@ This project aims to develop an advanced document retrieval system that integrat
 ### Step 1: Clone the Repository
 Clone the repository to your local machine:
 ```bash
-git clone https://github.com/moqim-ghizlan/Intelligent-Document-Retrieval.git
-cd Intelligent-Document-Retrieval
+git clone https://github.com/moqim-ghizlan/Graphes-Intelligent-Document-Retrieval-System.git
+cd Graphes-Intelligent-Document-Retrieval-System
 ```
 
 ### Step 2: Install Dependencies
