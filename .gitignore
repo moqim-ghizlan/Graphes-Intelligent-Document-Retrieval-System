@@ -1,0 +1,12 @@
+./.notebook
+./.ipynb_checkpoints
+./venv
+./__pycache__
+./.vscode
+
+
+.notebook
+.ipynb_checkpoints
+venv
+__pycache__
+.vscode
