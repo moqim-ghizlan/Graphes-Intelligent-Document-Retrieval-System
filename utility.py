@@ -19,8 +19,6 @@ Author: JUILLARD Thibaut and GHIZLAN Moqim
 
 """
 
-
-
 import pandas as pd
 import numpy as np
 import re
@@ -36,7 +34,6 @@ from sklearn.metrics import accuracy_score, pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import Counter
 from itertools import combinations
-
 
 
 def fetch_data(path):
@@ -159,7 +156,6 @@ def data_analyse(data):
         )
 
 
-
 def preprocess_text(text, stemmer=None):
     """
     Preprocesses a given text by applying tokenization, stopword removal, and optional stemming.
@@ -186,6 +182,7 @@ def preprocess_text(text, stemmer=None):
 
     return " ".join(words)
 
+
 def word_frequencies(df, column):
     """
     Computes word frequencies in a given text column of a DataFrame.
@@ -208,6 +205,7 @@ def word_frequencies(df, column):
     # Convert to DataFrame and sort by frequency
     freq_df = pd.DataFrame(word_count.items(), columns=["Word", "Frequency"])
     return freq_df.sort_values(by="Frequency", ascending=False)
+
 
 def compute_accuracy(df, text_column, label_column, vectorizer_type="tfidf"):
     """
@@ -248,10 +246,6 @@ def compute_accuracy(df, text_column, label_column, vectorizer_type="tfidf"):
     # Compute accuracy score
     acc = accuracy_score(y_test, y_pred)
     return acc
-
-
-
-
 
 
 def preprocess_query(query, stemmer=None):
@@ -316,7 +310,11 @@ def display_topics(model, feature_names, num_words=10):
 
     for topic_idx, topic in enumerate(model.components_):
         print(f"\n**Topic {topic_idx}**:")
-        print(", ".join([feature_names[i] for i in topic.argsort()[:-num_words - 1:-1]]))
+        print(
+            ", ".join(
+                [feature_names[i] for i in topic.argsort()[: -num_words - 1 : -1]]
+            )
+        )
 
 
 def get_cooccurrences(text_series, window_size=2):
@@ -334,7 +332,9 @@ def get_cooccurrences(text_series, window_size=2):
     word_pairs = Counter()
     for text in text_series:
         words = text.split()
-        for pair in combinations(words[:window_size], 2):  # Take words in the same window
+        for pair in combinations(
+            words[:window_size], 2
+        ):  # Take words in the same window
             word_pairs[pair] += 1
     return word_pairs
 
@@ -360,12 +360,16 @@ def find_word_in_corpus(word, data, vectorizer, X):
     similarities = cosine_similarity(word_vec, X)
 
     # Get the indices of the top 10 most relevant documents
-    top_docs = similarities.argsort()[0][-10:][::-1]  # Top 10 documents sorted by relevance
+    top_docs = similarities.argsort()[0][-10:][
+        ::-1
+    ]  # Top 10 documents sorted by relevance
 
     print(f"\nDocuments containing '{word}':\n")
     for doc_id in top_docs:
         print(f"{data.loc[doc_id, 'title']}")
-        print(f" Abstract: {data.loc[doc_id, 'abstract'][:300]}...")  # Display only first 300 chars
+        print(
+            f" Abstract: {data.loc[doc_id, 'abstract'][:300]}..."
+        )  # Display only first 300 chars
         print("-" * 80)
 
 
@@ -406,13 +410,17 @@ def clean_and_tokenize(text):
     """
 
     text = text.lower()  # Convert to lowercase
-    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters except spaces
-    words = re.findall(r'\b\w{3,}\b', text)  # Extract words with at least 3 characters
-    words = [word for word in words if word not in stopwords.words('english')]  # Remove stopwords
+    text = re.sub(r"[^a-zA-Z\s]", "", text)  # Remove special characters except spaces
+    words = re.findall(r"\b\w{3,}\b", text)  # Extract words with at least 3 characters
+    words = [
+        word for word in words if word not in stopwords.words("english")
+    ]  # Remove stopwords
     return words
 
 
-def top_tfidf_terms_per_cluster(data, vectorizer, X_vectorized, cluster_column, top_n=10):
+def top_tfidf_terms_per_cluster(
+    data, vectorizer, X_vectorized, cluster_column, top_n=10
+):
     """
     Extracts the top TF-IDF terms for each cluster.
 
@@ -434,7 +442,9 @@ def top_tfidf_terms_per_cluster(data, vectorizer, X_vectorized, cluster_column, 
         cluster_indices = data[data[cluster_column] == cluster].index
         cluster_vector = X_vectorized[cluster_indices].mean(axis=0)
 
-        terms_scores = zip(vectorizer.get_feature_names_out(), np.asarray(cluster_vector).flatten())
+        terms_scores = zip(
+            vectorizer.get_feature_names_out(), np.asarray(cluster_vector).flatten()
+        )
         sorted_terms = sorted(terms_scores, key=lambda x: x[1], reverse=True)
 
         top_terms[cluster] = sorted_terms[:top_n]
@@ -461,15 +471,19 @@ def central_documents_per_cluster(data, X_vectorized, cluster_column, num_docs=5
 
     for cluster in clusters:
         cluster_indices = data[data[cluster_column] == cluster].index
-        cluster_vectors = X_vectorized[cluster_indices].toarray()  # Convert to NumPy array
+        cluster_vectors = X_vectorized[
+            cluster_indices
+        ].toarray()  # Convert to NumPy array
 
         # Compute the average cluster center
         cluster_center = cluster_vectors.mean(axis=0)
-        distances = pairwise_distances(cluster_vectors, cluster_center.reshape(1, -1)).flatten()
+        distances = pairwise_distances(
+            cluster_vectors, cluster_center.reshape(1, -1)
+        ).flatten()
 
         # Select the most central documents
         central_doc_indices = cluster_indices[np.argsort(distances)[:num_docs]]
-        central_docs[cluster] = data.loc[central_doc_indices, ['title', 'abstract']]
+        central_docs[cluster] = data.loc[central_doc_indices, ["title", "abstract"]]
 
     return central_docs
 
@@ -495,7 +509,6 @@ def graph_to_adjacency_matrix(graph):
     return adjacency_matrix
 
 
-
 def check_adjacency_consistency(G, adj_matrix):
     """
     Checks the consistency between the adjacency matrix and the NetworkX graph.
@@ -517,8 +530,64 @@ def check_adjacency_consistency(G, adj_matrix):
     if len(mismatch_edges) == 0:
         print("All edges match correctly in the adjacency matrix.")
     else:
-        print(f"Mismatch found in {len(mismatch_edges)} edges. Example:", mismatch_edges[:10])
+        print(
+            f"Mismatch found in {len(mismatch_edges)} edges. Example:",
+            mismatch_edges[:10],
+        )
 
+
+def hybrid_search(
+    query, vectorizer, X, embedding_dict, pagerank_scores, alpha=0.5, beta=0.3
+):
+    """
+    Perform a hybrid search combining text similarity (TF-IDF), graph-based similarity (Node2Vec),
+    and PageRank centrality.
+
+    Parameters:
+        query (str): User input query.
+        vectorizer (TfidfVectorizer): Pre-trained TF-IDF vectorizer.
+        X (scipy.sparse matrix): TF-IDF representation of documents.
+        embedding_dict (dict): Node2Vec embeddings for documents.
+        pagerank_scores (dict): Precomputed PageRank centrality scores.
+        alpha (float): Weight for text similarity (0 ≤ alpha ≤ 1).
+        beta (float): Weight for PageRank influence (0 ≤ beta ≤ 1).
+
+    Returns:
+        list: Ranked documents with their final combined similarity scores.
+    """
+
+    # Process the query using the same TF-IDF vectorizer
+    query_vector = vectorizer.transform([query])
+
+    # Compute text-based cosine similarity
+    text_similarities = cosine_similarity(query_vector, X).flatten()
+
+    # Compute graph-based similarity using Node2Vec embeddings
+    query_embedding = np.mean([embedding_dict[str(node)] for node in G.nodes()], axis=0)
+    graph_similarities = cosine_similarity([query_embedding], node_embeddings).flatten()
+
+    # Convert PageRank scores into an array
+    pagerank_array = np.array([pagerank_scores[node] for node in G.nodes()])
+
+    # Normalize PageRank scores to range [0,1]
+    pagerank_array = (pagerank_array - pagerank_array.min()) / (
+        pagerank_array.max() - pagerank_array.min()
+    )
+
+    # Combine text similarity, graph similarity, and PageRank influence
+    combined_scores = (
+        alpha * text_similarities
+        + (1 - alpha - beta) * graph_similarities
+        + beta * pagerank_array
+    )
+
+    # Rank documents based on final similarity score
+    sorted_indices = np.argsort(combined_scores)[::-1]  # Descending order
+
+    # Retrieve top 10 relevant documents
+    top_docs = [(idx, combined_scores[idx]) for idx in sorted_indices[:10]]
+
+    return top_docs
 
 
 def find_authors_tfidf(article_vector, author_rep_tfidf, top_k=5):
@@ -536,13 +605,14 @@ def find_authors_tfidf(article_vector, author_rep_tfidf, top_k=5):
 
     # Calculate similarity between article vector and each author's vector
     similarities = {
-        author: cosine_similarity(article_vector.reshape(1, -1), vec.reshape(1, -1))[0, 0]
+        author: cosine_similarity(article_vector.reshape(1, -1), vec.reshape(1, -1))[
+            0, 0
+        ]
         for author, vec in author_rep_tfidf.items()
     }
 
     # Return top k authors sorted by similarity
     return sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:top_k]
-
 
 
 def find_authors_doc2vec(article_vector, author_rep_doc2vec, top_k=5):
@@ -560,7 +630,9 @@ def find_authors_doc2vec(article_vector, author_rep_doc2vec, top_k=5):
 
     # Calculate similarity between article vector and each author's vector
     similarities = {
-        author: cosine_similarity(article_vector.reshape(1, -1), vec.reshape(1, -1))[0, 0]
+        author: cosine_similarity(article_vector.reshape(1, -1), vec.reshape(1, -1))[
+            0, 0
+        ]
         for author, vec in author_rep_doc2vec.items()
     }
 
@@ -568,8 +640,15 @@ def find_authors_doc2vec(article_vector, author_rep_doc2vec, top_k=5):
     return sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:top_k]
 
 
-
-def evaluate_author_prediction(data, X_tfidf, doc_vectors, author_rep_tfidf, author_rep_doc2vec, method="tfidf", top_k=5):
+def evaluate_author_prediction(
+    data,
+    X_tfidf,
+    doc_vectors,
+    author_rep_tfidf,
+    author_rep_doc2vec,
+    method="tfidf",
+    top_k=5,
+):
     """
     Evaluate how accurately the true authors are predicted based on TF-IDF or Doc2Vec.
 
